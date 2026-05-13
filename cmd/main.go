@@ -3,6 +3,7 @@ package main
 import (
 	"go-api/controller"
 	"go-api/db"
+	"go-api/middleware"
 	"go-api/repository"
 	"go-api/usecase"
 
@@ -19,10 +20,15 @@ func main() {
 	}
 
 	ProductRepository := repository.NewProductRepository(dbConnection)
-
 	ProductUseCase := usecase.NewProductUseCase(ProductRepository)
-
 	ProductController := controller.NewProductController(ProductUseCase)
+
+	UserRepository := repository.NewUserRepository(dbConnection)
+	UserUseCase := usecase.NewUserUseCase(UserRepository)
+	AuthController := controller.NewAuthController(&UserUseCase)
+
+	server.POST("/register", AuthController.Register)
+	server.POST("/login", AuthController.Login)
 
 	server.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{
@@ -30,15 +36,19 @@ func main() {
 		})
 	})
 
-	server.GET("/products", ProductController.GetProducts)
+	protected := server.Group("/api")
+	protected.Use(middleware.AuthMiddleware())
+	{
+		protected.GET("/products", ProductController.GetProducts)
 
-	server.POST("/product", ProductController.CreateProduct)
+		protected.POST("/product", ProductController.CreateProduct)
 
-	server.GET("/product/:productId", ProductController.GetProductById)
+		protected.GET("/product/:productId", ProductController.GetProductById)
 
-	server.PUT("/product/:productId", ProductController.UpdateProduct)
+		protected.PUT("/product/:productId", ProductController.UpdateProduct)
 
-	server.DELETE("/product/:productId", ProductController.DeleteProduct)
+		protected.DELETE("/product/:productId", ProductController.DeleteProduct)
+	}
 
 	server.Run(":8000")
 }

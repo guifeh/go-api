@@ -62,7 +62,7 @@ func (pr *ProductRepository) CreateProduct(product model.Product) (int, error) {
 func (pr *ProductRepository) GetProductById(id int) (*model.Product, error) {
 	query, err := pr.connection.Prepare("SELECT * FROM product WHERE id = $1")
 	if err != nil {
-		fmt.Println("Error preparing query:", err)
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -100,4 +100,20 @@ func (pr *ProductRepository) UpdateProduct(id int, product model.Product) (model
 
 	query.Close()
 	return updatedProduct, nil
+}
+
+func (pr *ProductRepository) DeleteProduct(id int) error {
+	query, err := pr.connection.Prepare("DELETE FROM product WHERE id = $1")
+	if err != nil {
+		fmt.Println("Error preparing query:", err)
+		return err
+	}
+	defer query.Close()
+
+	_, err = query.Exec(id)
+	if err != nil {
+		fmt.Println("Error executing query:", err)
+		return err
+	}
+	return nil
 }

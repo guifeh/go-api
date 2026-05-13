@@ -45,3 +45,7 @@ func (p *ProductUseCase) UpdateProduct(id int, product model.Product) (*model.Pr
 	}
 	return &updatedProduct, nil
 }
+
+func (p *ProductUseCase) DeleteProduct(id int) error {
+	return p.repository.DeleteProduct(id)
+}
